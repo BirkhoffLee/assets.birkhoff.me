@@ -1,41 +1,45 @@
-import { basename } from 'path'
+import { purgeCloudflareCache } from './cloudflare.mjs'
+import hashFile from './util/hash.mjs'
+import getClashRelease from './util/cfw.mjs'
 
 await $`b2 authorize-account ${process.env.B2_KEYID} ${process.env.B2_KEY}`
 
-const req = await fetch(`https://api.github.com/repos/Fndroid/clash_for_windows_pkg/releases/latest`);
-const responseGitHub = await req.json();
+const {
+  windowsUrl,
+  windowsFilename,
+  macosUrl,
+  macosFilename,
+  sha256sum
+} = await getClashRelease()
 
-const windowsRegex = new RegExp('^Clash\\.for\\.Windows\\.Setup\\.\\d+\\.\\d+\\.\\d+\\.exe$');
-const windowsUrl = responseGitHub.assets.filter(a => windowsRegex.test(a.name))[0].browser_download_url;
-const windowsFilename = basename(windowsUrl)
-
-const macosRegex = new RegExp('^Clash\\.for\\.Windows-\\d+\\.\\d+\\.\\d+\\.dmg');
-const macosUrl = responseGitHub.assets.filter(a => macosRegex.test(a.name))[0].browser_download_url;
-const macosFilename = basename(macosUrl)
+const expectedWindowsSha256Hash = sha256sum.match(/^exe: (.*?)$/m)[1]
+const expectedMacosSha256Hash = sha256sum.match(/^dmg: (.*?)$/m)[1]
 
 await Promise.all([
-  $`wget -q -O ${windowsFilename} ${windowsUrl} && b2 upload-file --quiet --noProgress assets-birkhoff-me ./${windowsFilename} clash.exe`,
-  $`wget -q -O ${macosFilename} ${macosUrl} && b2 upload-file --quiet --noProgress assets-birkhoff-me ./${macosFilename} clash.dmg`
+  (async () => {
+    await $`wget -q -O ${windowsFilename} ${windowsUrl}`
+
+    const sha256Hash = await hashFile(windowsFilename, "sha256")
+    const sha1Hash = await hashFile(windowsFilename, "sha1")
+    
+    if (sha256Hash !== expectedWindowsSha256Hash)
+      throw new Error(`sha256sum doesn't match for downloaded ${windowsFilename}`)
+
+    await $`b2 upload-file --quiet --noProgress --sha1 ${sha1Hash} assets-birkhoff-me ./${windowsFilename} clash.exe`
+    await purgeCloudflareCache(["https://assets.birkhoff.me/clash.exe"])
+  })(),
+  (async () => {
+    await $`wget -q -O ${macosFilename} ${macosUrl}`
+
+    const sha256Hash = await hashFile(macosFilename, "sha256")
+    const sha1Hash = await hashFile(macosFilename, "sha1")
+
+    if (sha256Hash !== expectedMacosSha256Hash)
+      throw new Error(`sha256sum doesn't match for downloaded ${macosFilename}`)
+
+    await $`b2 upload-file --quiet --noProgress --sha1 ${sha1Hash} assets-birkhoff-me ./${macosFilename} clash.dmg`
+    await purgeCloudflareCache(["https://assets.birkhoff.me/clash.dmg"])
+  })()
 ])
 
 await $`b2 clear-account`
-
-const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/zones/${process.env.CF_ZONE_ID}/purge_cache`, {
-  method: 'post',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${process.env.CF_API_TOKEN}`
-  },
-  body: JSON.stringify({
-    files: [
-      "https://assets.birkhoff.me/clash.exe",
-      "https://assets.birkhoff.me/clash.dmg"
-    ]
-  }),
-})
-
-const responseCloudflare = await purgeCloudflareCache.json()
-
-if (!responseCloudflare.success) {
-  throw new Error(JSON.stringify(responseCloudflare))
-}
