@@ -14,13 +14,8 @@ const macosUrl = response.assets.filter(a => macosRegex.test(a.name))[0].browser
 const macosFilename = basename(macosUrl)
 
 await Promise.all([
-  $`wget -q --show-progress -O ${windowsFilename} ${windowsUrl}`,
-  $`wget -q --show-progress -O ${macosFilename} ${macosUrl}`
-])
-
-await Promise.all([
-  $`b2 upload-file assets-birkhoff-me ./${windowsFilename} clash.exe`,
-  $`b2 upload-file assets-birkhoff-me ./${macosFilename} clash.dmg`
+  $`wget -q -O ${windowsFilename} ${windowsUrl} && b2 upload-file assets-birkhoff-me ./${windowsFilename} clash.exe`,
+  $`wget -q -O ${macosFilename} ${macosUrl} && b2 upload-file assets-birkhoff-me ./${macosFilename} clash.dmg`
 ])
 
 await $`b2 clear-account`
