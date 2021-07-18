@@ -3,14 +3,14 @@ import { basename } from 'path'
 await $`b2 authorize-account ${process.env.B2_KEYID} ${process.env.B2_KEY}`
 
 const req = await fetch(`https://api.github.com/repos/Fndroid/clash_for_windows_pkg/releases/latest`);
-const response = await req.json();
+const responseGitHub = await req.json();
 
 const windowsRegex = new RegExp('^Clash\\.for\\.Windows\\.Setup\\.\\d+\\.\\d+\\.\\d+\\.exe$');
-const windowsUrl = response.assets.filter(a => windowsRegex.test(a.name))[0].browser_download_url;
+const windowsUrl = responseGitHub.assets.filter(a => windowsRegex.test(a.name))[0].browser_download_url;
 const windowsFilename = basename(windowsUrl)
 
 const macosRegex = new RegExp('^Clash\\.for\\.Windows-\\d+\\.\\d+\\.\\d+\\.dmg');
-const macosUrl = response.assets.filter(a => macosRegex.test(a.name))[0].browser_download_url;
+const macosUrl = responseGitHub.assets.filter(a => macosRegex.test(a.name))[0].browser_download_url;
 const macosFilename = basename(macosUrl)
 
 await Promise.all([
@@ -34,8 +34,8 @@ const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/z
   }),
 })
 
-const response = await purgeCloudflareCache.json()
+const responseCloudflare = await purgeCloudflareCache.json()
 
-if (!response.success) {
-  throw new Error(response)
+if (!responseCloudflare.success) {
+  throw new Error(responseCloudflare)
 }
