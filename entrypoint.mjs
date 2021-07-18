@@ -1,6 +1,6 @@
 import { basename } from 'path'
 
-await $`b2 authorize-account ${process.env.b2_keyid} ${process.env.b2_key}`
+await $`b2 authorize-account ${process.env.B2_KEYID} ${process.env.B2_KEY}`
 
 const req = await fetch(`https://api.github.com/repos/Fndroid/clash_for_windows_pkg/releases/latest`);
 const response = await req.json();
