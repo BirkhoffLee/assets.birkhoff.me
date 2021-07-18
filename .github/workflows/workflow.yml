@@ -24,3 +24,7 @@ jobs:
         pip install --no-cache-dir b2==2.1.0
     - name: Run script
       run: zx ./entrypoint.mjs
+      env:
+        B2_KEYID: ${{ secrets.B2_KEYID }}
+        B2_KEY: ${{ secrets.B2_KEY }}
+
