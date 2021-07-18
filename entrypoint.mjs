@@ -19,3 +19,23 @@ await Promise.all([
 ])
 
 await $`b2 clear-account`
+
+const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/zones/${process.env.CF_API_TOKEN}/purge_cache`, {
+  method: 'post',
+  headers: {
+    'Content-Type': 'application/json',
+    'Authorization:': `Bearer ${process.env.CF_ZONE_ID}`
+  },
+  body: JSON.stringify({
+    files: [
+      "https://assets.birkhoff.me/clash.exe",
+      "https://assets.birkhoff.me/clash.dmg"
+    ]
+  }),
+})
+
+const response = await purgeCloudflareCache.json()
+
+if (!response.success) {
+  throw new Error(response)
+}
