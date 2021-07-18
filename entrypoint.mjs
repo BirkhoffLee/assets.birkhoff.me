@@ -20,11 +20,11 @@ await Promise.all([
 
 await $`b2 clear-account`
 
-const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/zones/${process.env.CF_API_TOKEN}/purge_cache`, {
+const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/zones/${process.env.CF_ZONE_ID}/purge_cache`, {
   method: 'post',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${process.env.CF_ZONE_ID}`
+    'Authorization': `Bearer ${process.env.CF_API_TOKEN}`
   },
   body: JSON.stringify({
     files: [
@@ -37,5 +37,5 @@ const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/z
 const responseCloudflare = await purgeCloudflareCache.json()
 
 if (!responseCloudflare.success) {
-  throw new Error(responseCloudflare)
+  throw new Error(JSON.stringify(responseCloudflare))
 }
