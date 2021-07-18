@@ -2,7 +2,7 @@ name: Update assets.birkhoff.me
 on:
   push:
     branches:
-      - master
+      - main
   schedule:
     - cron: '0 0 * * 0'
 
