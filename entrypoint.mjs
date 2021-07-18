@@ -24,7 +24,7 @@ const purgeCloudflareCache = await fetch(`https://api.cloudflare.com/client/v4/z
   method: 'post',
   headers: {
     'Content-Type': 'application/json',
-    'Authorization:': `Bearer ${process.env.CF_ZONE_ID}`
+    'Authorization': `Bearer ${process.env.CF_ZONE_ID}`
   },
   body: JSON.stringify({
     files: [
