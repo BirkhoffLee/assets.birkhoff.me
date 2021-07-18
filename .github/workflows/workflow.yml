@@ -1,0 +1,26 @@
+name: Update assets.birkhoff.me
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+        architecture: x64
+    - name: Install dependencies
+      run: |
+        npm i -g zx
+        pip install --no-cache-dir b2==2.1.0
+    - name: Run script
+      run: zx ./entrypoint.mjs
